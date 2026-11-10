@@ -34,16 +34,37 @@ If you use API-key billing instead of a subscription, set `ANTHROPIC_API_KEY` in
 
 ## Install
 
+Run these from **inside** the `dtranscript` folder (the one with `app.py` and `requirements.txt`) — not its parent. A venv created in the wrong directory still "works" enough to confuse you (`pip install` succeeds), but `python app.py` won't find it unless you also activate it from that same wrong directory every time.
+
+**macOS / Linux** (bash/zsh):
+```bash
+git clone https://github.com/pedrovanzo/dtranscript.git
+cd dtranscript
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+**Windows** (PowerShell):
 ```powershell
 git clone https://github.com/pedrovanzo/dtranscript.git
 cd dtranscript
 python -m venv .venv
-.venv\Scripts\activate          # macOS/Linux: source .venv/bin/activate
+.venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
+Don't mix the two: `.venv\Scripts\activate` is a Windows path and does nothing on macOS/Linux (and vice versa for `source .venv/bin/activate`).
+
 ## Run the server
 
+**macOS / Linux**:
+```bash
+source .venv/bin/activate
+python app.py
+```
+
+**Windows**:
 ```powershell
 .venv\Scripts\activate
 python app.py
@@ -51,9 +72,11 @@ python app.py
 
 Open **http://127.0.0.1:7860** in your browser. Stop the server with `Ctrl+C` in the terminal.
 
-To use another port: `$env:DTRANSCRIPT_PORT=8080; python app.py` (PowerShell) or `DTRANSCRIPT_PORT=8080 python app.py` (bash).
+To use another port: `DTRANSCRIPT_PORT=8080 python app.py` (bash/zsh) or `$env:DTRANSCRIPT_PORT=8080; python app.py` (PowerShell).
 
 The server binds only to `127.0.0.1`, so it is not reachable from other machines.
+
+If you ever need to start over, delete the `.venv` folder and recreate it — never move an existing `.venv` to a new location; the scripts inside it (`pip`, `pytest`, ...) hardcode the absolute path they were created at and break if the folder moves.
 
 ## Use
 
@@ -108,7 +131,8 @@ claude -p --output-format text --tools "" --setting-sources "" --no-session-pers
 
 ## Tests
 
-```powershell
+With the venv activated (see above, either OS):
+```
 python -m pytest -q
 ```
 

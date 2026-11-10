@@ -13,15 +13,18 @@ from dtranscript.core import (
     render_markdown,
     save_markdown,
 )
+from dtranscript.llm import DEFAULT_PROFILE
 from dtranscript.youtube import get_transcript
 
 MODES = {"Raw transcript": "raw", "AI summary": "summary"}
 MODELS = ["CLI default", "sonnet", "opus", "haiku"]
 WHISPER_SIZES = ["tiny", "base", "small", "medium", "large-v3"]
+PROFILES = {"Work": "work", "Personal": "personal", "Regular (no override)": "regular"}
+PROFILE_LABELS = {v: k for k, v in PROFILES.items()}
 
 
-def run(url, mode_label, template, language, model_label, timestamps, append_transcript,
-        force_whisper, whisper_size):
+def run(url, mode_label, template, language, model_label, profile_label, timestamps,
+        append_transcript, force_whisper, whisper_size):
     log_lines: list[str] = []
 
     def log(msg: str):
@@ -32,6 +35,7 @@ def run(url, mode_label, template, language, model_label, timestamps, append_tra
 
     mode = MODES[mode_label]
     model = None if model_label == "CLI default" else model_label
+    profile = PROFILES[profile_label]
 
     if not (url or "").strip():
         yield "", None, "Paste a YouTube URL first."
@@ -50,7 +54,7 @@ def run(url, mode_label, template, language, model_label, timestamps, append_tra
         if mode == "summary":
             log(f"Analyzing with Claude (template: {template}, model: {model_label})...")
             yield "", None, status()
-            analysis = analyze(t, template, language=language, model=model)
+            analysis = analyze(t, template, language=language, model=model, profile=profile)
 
         md = render_markdown(t, mode, analysis=analysis, template=template, model=model,
                              timestamps=timestamps, append_transcript=append_transcript)
@@ -85,13 +89,17 @@ def build_ui() -> gr.Blocks:
                 whisper_size = gr.Dropdown(WHISPER_SIZES,
                                            value=os.getenv("DTRANSCRIPT_WHISPER_MODEL", "small"),
                                            label="Whisper model")
+                profile = gr.Dropdown(list(PROFILES),
+                                      value=PROFILE_LABELS[DEFAULT_PROFILE],
+                                      label="Claude account",
+                                      info="Which CLAUDE_CONFIG_DIR to run `claude` with (mirrors the claude-work/claude-personal shell functions).")
             refresh = gr.Button("Reload templates", size="sm")
 
         status = gr.Textbox(label="Status", lines=4, interactive=False)
         file_out = gr.File(label="Markdown file")
         preview = gr.Markdown(label="Preview")
 
-        inputs = [url, mode, template, language, model, timestamps, append_transcript,
+        inputs = [url, mode, template, language, model, profile, timestamps, append_transcript,
                   force_whisper, whisper_size]
         go.click(run, inputs, [preview, file_out, status])
         url.submit(run, inputs, [preview, file_out, status])

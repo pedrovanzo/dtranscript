@@ -42,7 +42,13 @@ def load_template(name: str) -> str:
     return path.read_text(encoding="utf-8")
 
 
-def analyze(t: Transcript, template: str, language: str = "Same as video", model: str | None = None) -> str:
+def analyze(
+    t: Transcript,
+    template: str,
+    language: str = "Same as video",
+    model: str | None = None,
+    profile: str | None = None,
+) -> str:
     system = "\n\n".join([
         BASE_SYSTEM,
         LANG_INSTRUCTIONS.get(language, LANG_INSTRUCTIONS["Same as video"]),
@@ -54,7 +60,7 @@ def analyze(t: Transcript, template: str, language: str = "Same as video", model
         f"URL: {t.url}\n\n"
         f"<transcript>\n{t.timestamped_text()}\n</transcript>"
     )
-    return call_claude(prompt, system=system, model=model)
+    return call_claude(prompt, system=system, model=model, profile=profile)
 
 
 # --------------------------------------------------------------------------- #
